@@ -1,0 +1,72 @@
+{% extends 'base.html' %} <!-- extend all base.html code here-->
+
+{% block content %}
+
+<div class="row">
+                <div class="col-sm-12">
+                    <div class="card">
+                    <div class="card-body">
+                        <form method="post" action="{% url 'profile/update' %}" enctype="multipart/form-data"><!-- post(send) this data 'profile/update' (url.py)-->
+                            {% csrf_token %}
+                            
+                                <div class="col-12">
+                                <h5 class="form-title"><span>Profile Update</span></h5>
+                                </div>
+                                
+                                 <div class="alert alert-warning alert-dismissible fade show" role="alert">
+                                    {{request.session.message}} <!-- message from (views-PROFILEUPDATE)-->
+
+                                   <button type="button" class="close" data-dismiss="alert" arial-label="close">
+                                    <span arial-hidden="true">&times;</span>
+                                   </button> 
+                                 </div> 
+                                <div class="col-12 col-sm-6">
+                                </div>
+                                <div class="form-group">
+                                    <label>Profile Pic</label>
+                                    <input type="file" class="form-control" name="profile_pic">
+                                </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                <div class="form-group">
+                                    <label>First Name</label>
+                                    <input type="text" class="form-control" name="first_name"  value="{{user.first_name}}">  <!-- give value-->
+                                </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                <div class="form-group">
+                                    <label>Last Name</label>
+                                    <input type="text" class="form-control" name="last_name"  value="{{user.last_name}}"> <!-- give value-->
+                                </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                <div class="form-group">
+                                    <label>Email</label>
+                                    <input type="text" class="form-control" name="email"  value="{{user.email}}" readonly > <!-- give value-->
+                                </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                <div class="form-group">
+                                        <label>Username</label>
+                                        <input type="text" class="form-control" name="username"  value="{{user.username}}"readonly> <!-- give value-->
+                                </div>
+                                </div>
+                                <div class="col-12 col-sm-6">
+                                <div class="form-group">
+                                        <label>Password</label>
+                                        <input type="password" class="form-control" name="password" placeholder="Fill only If you went to change Password">
+                                </div>
+                                </div>
+                                <div class="col-12">
+                                <button type="submit" class="btn btn-primary">Update Profile</button>
+                                </div>
+                            
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+
+{% endblock %}
+
+
