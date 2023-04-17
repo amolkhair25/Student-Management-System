@@ -19,6 +19,7 @@ def doLogin(request):
     # authenticate get all data of user page (S_M_S constomuser data chake in DB Browser)
         user = authenticate(username=request.POST.get('email'), # get username (email) from login.html
                                                   password=request.POST.get('password'),) # get password (password) from login.html
+    
     if user!=None: #login page empty  direct go to else part
         login(request,user) #  for login when user is correct then  login successfully  and go to the next page
         user_type = user.user_type # user take user_type of user
@@ -57,20 +58,24 @@ def PROFILEUPDATE (request):
         #email=request.POST.get('email') # don't change this
         #username=request.POST.get('username') # don't change this
         password=request.POST.get('password')
-        try:
-            customuser=CustomUser.objects.get(id=request.user.id)#take id from customuser (database) id take because id is unique so for profile change id is important
-            customuser.first_name= first_name # give data to data base
-            customuser.last_name= last_name
+       
+        if not(first_name.isalpha() and last_name.isalpha()):
+            request.session['message'] = "Check First_Name or Last_name"
+        else:    
+            try:
+                customuser=CustomUser.objects.get(id=request.user.id)#take id from customuser (database) id take because id is unique so for profile change id is important
+                customuser.first_name= first_name # give data to data base
+                customuser.last_name= last_name
+                
+                if password != None and password != "":
+                    customuser.set_password(password)#if you want change password then use this line othewise skip
+                if profile_pic != None and profile_pic != "":
+                    customuser.profile_pic = profile_pic #if you want change profile_pic then use this line othewise skip    
+                customuser.save()    # sava data in data base
+                request.session['message'] = "Your profile updated successfully!" # send massage on profile.html page with redirect 
+                return redirect('profile')
+            except:
             
-            if password != None and password != "":
-                customuser.set_password(password)#if you want change password then use this line othewise skip
-            if profile_pic != None and profile_pic != "":
-                customuser.profile_pic = profile_pic #if you want change profile_pic then use this line othewise skip    
-            customuser.save()    # sava data in data base
-            request.session['message'] = "Your profile updated successfully!" # send massage on profile.html page with redirect 
-            return redirect('profile')
-        except:
-           
-            request.session['message'] = "Failed to update profile!" # send massage on profile.html with redirect page
-            return redirect('profile')         
+                request.session['message'] = "Failed to update profile!" # send massage on profile.html with redirect page
+                return redirect('profile')         
     return render (request,'profile.html') 

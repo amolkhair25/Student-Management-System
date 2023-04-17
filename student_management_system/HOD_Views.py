@@ -1,7 +1,7 @@
 from django.shortcuts import render,redirect # for render, redirect page 
 from django.contrib.auth.decorators import login_required #login must required don't open profile page without login
 from S_M_S.models import Course, Session_Year,CustomUser,Student,Staff,Subject,Staff_Notification,Staff_leave,Staff_Feedback,Student_Notification,Student_Feedback,Student_leave,Attendance,Attendance_Report # import  Course, Session_Year,CustomUser,Student models here
-
+from django.contrib.sessions.models import Session
 
 @login_required(login_url='/') # don't open profile page (HOD/home.html) without login (url - login - login.html - dologin - render login.html page)
 def HOME(request): 
@@ -44,56 +44,60 @@ def ADD_STUDENT(request):
         course_id = request.POST.get('course_id')
         session_year_id = request.POST.get('session_year_id')
         
-        if CustomUser.objects.filter(email=email).exists():# if database email and add_student.html email are same then
-            request.session['message'] = "Email Is Already Taken" # send massage on add_student.html page with redirect 
-            return redirect('add_student')
-        
-        if CustomUser.objects.filter(username=username).exists():# if database username and add_student.html username are same then
-            request.session['message'] = "username Is Already Taken" # send massage on add_student.html page with redirect 
-            return redirect('add_student')
-        
+        if not(first_name.isalpha() and last_name.isalpha()):
+            request.session['message'] = "Check First_Name or Last_name"
+        elif username == "" and password == "":
+            request.session['message'] = "username or password failed"
         else:
-            # get add_student data in CustomUser and save in CustomUser(blueline=Customuser and white add_student.html)
-            # Object Creation
-            user=CustomUser(
-                first_name = first_name,
-                last_name = last_name,
-                username = username,
-                email = email,
-                profile_pic = profile_pic,
-                user_type=3
-            )
-            user.set_password(password)
-            user.save()# save this data in CustomUser
-
-            course = Course.objects.get(id=course_id)# take course_id in course from (Course model)
-            session_year = Session_Year.objects.get(id= session_year_id)# take session_year_id in session_year from (Session_Year model)
-            # get add_student data in student and save in student(blueline=Customuser and white add_student.html)
-            student = Student(
-                admin=user,# admin get from user(CostomUser)
-                address= address,# get from add_student.html
-                session_year_id=session_year,# get from session_year
-                course_id=course,# get from course
-                gender = gender # get from add_student.html
-
-            )
-            student.save()
-            request.session['message'] = user.first_name + " " + user.last_name + " are successfully added" # send massage on add_student.html page with redirect 
-            return redirect('add_student')
         
+            if CustomUser.objects.filter(email=email).exists():# if database email and add_student.html email are same then
+                request.session['message'] = "Email Is Already Taken" # send massage on add_student.html page with redirect 
+                return redirect('add_student')
+            
+            if CustomUser.objects.filter(username=username).exists():# if database username and add_student.html username are same then
+                request.session['message'] = "username Is Already Taken" # send massage on add_student.html page with redirect 
+                return redirect('add_student')
+            
+            else:
+                # get add_student data in CustomUser and save in CustomUser(blueline=Customuser and white add_student.html)
+                # Object Creation
+                user=CustomUser(
+                    first_name = first_name,
+                    last_name = last_name,
+                    username = username,
+                    email = email,
+                    profile_pic = profile_pic,
+                    user_type=3
+                )
+                user.set_password(password)
+                user.save()# save this data in CustomUser
+
+                course = Course.objects.get(id=course_id)# take course_id in course from (Course model)
+                session_year = Session_Year.objects.get(id= session_year_id)# take session_year_id in session_year from (Session_Year model)
+                # get add_student data in student and save in student(blueline=Customuser and white add_student.html)
+                student = Student(
+                    admin=user,# admin get from user(CostomUser)
+                    address= address,# get from add_student.html
+                    session_year_id=session_year,# get from session_year
+                    course_id=course,# get from course
+                    gender = gender # get from add_student.html
+
+                )
+                student.save()
+                request.session['message'] = user.first_name + " " + user.last_name + " are successfully added" # send massage on add_student.html page with redirect 
+                return redirect('add_student')
+            
     context={
         'course':course,# send add_student.html for (course) dropdown and send value
         'session_year':session_year # send add_student.html for (course) dropdown send value
     }
-    
-   
+
     return render(request,'HOD/add_student.html',context)    #send context to HOD/add_student.html
 
 
 @login_required(login_url='/') 
-def VIEW_STUDENT(request):   
+def VIEW_STUDENT(request): 
     student=Student.objects.all() 
-    
     context={
        'student':student, # Send data for take a value in 'HOD/view_student.html'
     }
@@ -128,33 +132,49 @@ def UPDATE_STUDENT(request):
         course_id = request.POST.get('course_id')
         session_year_id = request.POST.get('session_year_id')
        
-        user=CustomUser.objects.get(id=student_id)# take id from edit_student.html and all info of that id
-        user.first_name=first_name
-        user.last_name=last_name
-        user.email=email
-        user.username=username
+        if not(first_name.isalpha() and last_name.isalpha()):
+            request.session['message'] = "Check First_Name or Last_name"
+            return redirect('view_student')
+        else:
+            user=CustomUser.objects.get(id=student_id)# take id from edit_student.html and all info of that id
+            
+            
+            if user.email != email :
 
-        if password != None and password != "":
-            user.set_password(password)#if you want change password then use this line othewise skip
-        if profile_pic != None and profile_pic != "":
-            user.profile_pic = profile_pic #if you want change profile_pic then use this line othewise skip    
-        user.save()
+                if CustomUser.objects.filter(email=email).exists():# if database email and add_student.html email are same then
+                    request.session['message'] = "Email Is Already Taken" # send massage on add_student.html page with redirect 
+                    return redirect('view_student')
+            
+            if user.username != username :
+                if CustomUser.objects.filter(username=username).exists():# if database username and add_student.html username are same then
+                    request.session['message'] = "username Is Already Taken" # send massage on add_student.html page with redirect 
+                    return redirect('view_student')
+            if password != None and password != "":
+                user.set_password(password)#if you want change password then use this line othewise skip
+            if profile_pic != None and profile_pic != "":
+                user.profile_pic = profile_pic #if you want change profile_pic then use this line othewise skip    
 
-        student=Student.objects.get(admin=student_id)
-        student.address=address
-        student.gender=gender
+            user.first_name=first_name
+            user.last_name=last_name
+            user.email=email
+            user.username=username
+            user.save()
 
-        course=Course.objects.get(id=course_id)# we send course_id in edit_student.html
-        student.course_id=course
+            student=Student.objects.get(admin=student_id)
+            student.address=address
+            student.gender=gender
 
-        session_year=Session_Year.objects.get(id=session_year_id)
-        student.session_year_id=session_year
-        
-        
-        student.save()
+            course=Course.objects.get(id=course_id)# we send course_id in edit_student.html
+            student.course_id=course
 
-        request.session['message'] = "Record Are Successfully Updated!" # send massage on view_student.html page with redirect 
-        return redirect('view_student')
+            session_year=Session_Year.objects.get(id=session_year_id)
+            student.session_year_id=session_year
+            
+            
+            student.save()
+
+            request.session['message'] = "Record Are Successfully Updated!" # send massage on view_student.html page with redirect 
+            return redirect('view_student')
 
         
     return render(request,'HOD/edit_student.html')
@@ -163,8 +183,10 @@ def UPDATE_STUDENT(request):
 
 @login_required(login_url='/') 
 def DELETE_STUDENT(request,admin):# (admin = CustomUser id )
-    student=CustomUser.objects.get(id=admin)
-    student.delete()
+    
+    student1=Student.objects.get(id=admin)
+    user = CustomUser.objects.get(id=student1.admin.id)
+    user.delete()
     request.session['message'] = "Record Are Successfully Deleted!"
 
     return redirect('view_student') 
@@ -175,13 +197,22 @@ def DELETE_STUDENT(request,admin):# (admin = CustomUser id )
 def ADD_COURSE(request):
     if request.method=="POST":
         course_name = request.POST.get('course_name')
+        if not(course_name.isalpha()):
+            request.session['message'] = "Use Alphabets for Course Name"
+        else:
+            course=Course.objects.all()
+            for i in course:
+                if i.name == course_name:
+                    request.session['message'] = "Course Is Already Taken" # send massage on add_student.html page with redirect 
+                    return redirect('add_course')
+                    
+            course=Course(
+                name=course_name, #(name = Course(model) course_name = add_course.html)
+            )
+            course.save()
+            request.session['message'] = "Course Are Successfully Created!"
+            return redirect('add_course')
         
-        course=Course(
-            name=course_name, #(name = Course(model) course_name = add_course.html)
-        )
-        course.save()
-        request.session['message'] = "Course Are Successfully Created!"
-        return redirect('add_course')
 
     return render(request,'HOD/add_course.html')
 
@@ -212,14 +243,20 @@ def UPDATE_COURSE(request):
     if request.method=='POST':
         name = request.POST.get('name')
         course_id = request.POST.get('course_id')
-
-        course=Course.objects.get(id=course_id)
-        course.name = name #(course_name= edit_course name=Course (model))
-        course.save()
-
-        request.session['message'] = "Course Are Successfully Updated!"
-        return redirect('view_course')
-
+        courses = Course.objects.all()
+        if name.isalpha():
+            for i in courses:
+                if i.name.lower() == name.lower():
+                    request.session['message'] = "Course Is Already Taken" 
+                    return redirect('view_course')
+            else:
+                course.name = name #(course_name= edit_course name=Course (model))
+                course.save()
+                request.session['message'] = "Course Are Successfully Updated!"
+                return redirect('view_course')
+        else:
+            request.session['message'] = "Course name should be Alphabets only" 
+            return redirect('edit_course',course_id)
     return render(request,'HOD/edit_course.html')
 
 
@@ -244,37 +281,42 @@ def ADD_STAFF(request):
         address=request.POST.get('address')
         gender=request.POST.get('gender')
 
-        if CustomUser.objects.filter(email=email).exists():
-            request.session['message'] = "Email Is Already Taken!"
-            return redirect('add_staff')
-
-        if CustomUser.objects.filter(username=username).exists():
-            request.session['message'] = "Username Is Already Taken!"
-            return redirect('add_staff')
-
+        if not(first_name.isalpha() and last_name.isalpha()):
+            request.session['message'] = "Check First_Name or Last_name"
+        elif username == "" and password == "":
+            request.session['message'] = "username or password failed"
         else:
-            user= CustomUser(
-                profile_pic=profile_pic,
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-                username=username,
-                user_type=2,
-                )    
-            user.set_password(password) # after this process you can use username and password in login.html
-            user.save()# save in CustomUser
-        
-            staff=Staff(
-                admin=user,
-                address=address,
-                gender=gender,
-            )
-            staff.save() # save all data in staff(model) (database)
+            if CustomUser.objects.filter(email=email).exists():
+                request.session['message'] = "Email Is Already Taken!"
+                return redirect('add_staff')
 
-            # Save Manava all data
+            if CustomUser.objects.filter(username=username).exists():
+                request.session['message'] = "Username Is Already Taken!"
+                return redirect('add_staff')
 
-            request.session['message'] = "Staff Are Successfully Added!"
-            return redirect('add_staff')
+            else:
+                user= CustomUser(
+                    profile_pic=profile_pic,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    username=username,
+                    user_type=2,
+                    )    
+                user.set_password(password) # after this process you can use username and password in login.html
+                user.save()# save in CustomUser
+            
+                staff=Staff(
+                    admin=user,
+                    address=address,
+                    gender=gender,
+                )
+                staff.save() # save all data in staff(model) (database)
+
+                # Save Manava all data
+
+                request.session['message'] = "Staff Are Successfully Added!"
+                return redirect('add_staff')
 
 
     return render(request,'HOD/add_staff.html')    
@@ -320,24 +362,29 @@ def UPDATE_STAFF(request):
         gender=request.POST.get('gender')
 
         user=CustomUser.objects.get(id=staff_id)
-        user.first_name = first_name
-        user.last_name = last_name
-        user.username = username
-        user.email = email
-        
-        if password != None and password != "":
-            user.set_password(password)#if you want change password then use this line othewise skip
-        if profile_pic != None and profile_pic != "":
-            user.profile_pic = profile_pic #if you want change profile_pic then use this line othewise skip    
-        user.save()      # save this information in CustomUser (model)  
-        
-        staff=Staff.objects.get(admin=staff_id)# admin come from Staff(model)-> CustomUser id (in all info of that id) store in admin 
-        staff.address = address
-        staff.gender = gender
-        staff.save() # save admin(CustomUser) + staff information in Staff (model)
+        if not(first_name.isalpha() and last_name.isalpha()):
+            request.session['message'] = "Check First_Name or Last_name"
+            return redirect('view_staff')
+        else:
+            user.first_name = first_name
+            user.last_name = last_name
+            user.username = username
+            user.email = email
 
-        request.session['message'] = "Staff Is Successfully Updated!" # send massage on view_staff.html page with redirect 
-        return redirect('view_staff')
+            
+            if password != None and password != "":
+                user.set_password(password)#if you want change password then use this line othewise skip
+            if profile_pic != None and profile_pic != "":
+                user.profile_pic = profile_pic #if you want change profile_pic then use this line othewise skip    
+            user.save()      # save this information in CustomUser (model)  
+            
+            staff=Staff.objects.get(admin=staff_id)# admin come from Staff(model)-> CustomUser id (in all info of that id) store in admin 
+            staff.address = address
+            staff.gender = gender
+            staff.save() # save admin(CustomUser) + staff information in Staff (model)
+
+            request.session['message'] = "Staff Is Successfully Updated!" # send massage on view_staff.html page with redirect 
+            return redirect('edit_staff')
 
     return render(request,'HOD/edit_staff.html')
 
@@ -358,24 +405,31 @@ def ADD_SUBJECT(request):
     course=Course.objects.all()
     staff=Staff.objects.all()
     
+    
     if request.method == "POST":
         subject_name = request.POST.get('subject_name')
         course_id = request.POST.get('course_id') # take only Course(model) id(value) from add_subject
         staff_id = request.POST.get('staff_id')  # take only Staff(model) id(value) from add_subject
-
-        course = Course.objects.get(id=course_id) #using this id take all information of that (Course(model)) id and store in course 
-        staff=Staff.objects.get(id=staff_id) #using this id take all information of that (Staff(model)) id and store in staff
         
-        # and save all information of that id (Course(model)) and id (Staff(model))
-        subject=Subject(
-            name = subject_name,
-            course= course,
-            staff= staff,
-        )
-        subject.save()
+        if not(subject_name.isalpha() ):
+            request.session['message'] = "Use Alphabet for Subject_Name "
+            return redirect('add_subject')
+        
+        else:
+        
+            course = Course.objects.get(id=course_id) #using this id take all information of that (Course(model)) id and store in course 
+            staff=Staff.objects.get(id=staff_id) #using this id take all information of that (Staff(model)) id and store in staff
+            
+            # and save all information of that id (Course(model)) and id (Staff(model))
+            subject=Subject(
+                name = subject_name,
+                course= course,
+                staff= staff,
+            )
+            subject.save()
 
-        request.session['message'] = "Subjects Are Successfully Updated!" 
-        return redirect('add_subject')
+            request.session['message'] = "Subjects Are Successfully Updated!" 
+            return redirect('add_subject')
 
     context = {
         'course': course, # send all data in add_subject use for value (id)
@@ -423,16 +477,23 @@ def UPDATE_SUBJECT(request):
         course = Course.objects.get(id=course_id)
         staff = Staff.objects.get(id=staff_id)
 
-        subject=Subject(
-            id = subject_id,
-            name = subject_name,
-            course = course,
-            staff = staff,
-        )
+          
+        if not(subject_name.isalpha() ):
+            request.session['message'] = "Use Alphabet for Subject_Name "
+            return redirect('view_subject')
         
-        subject.save()
-        request.session['message'] = "Subjects Are Successfully Updated!" 
-        return redirect('view_subject')
+        else:
+
+            subject=Subject(
+                id = subject_id,
+                name = subject_name,
+                course = course,
+                staff = staff,
+            )
+            
+            subject.save()
+            request.session['message'] = "Subjects Are Successfully Updated!" 
+            return redirect('view_subject')
 
     return render(request, 'HOD/edit_subject.html')    
 
