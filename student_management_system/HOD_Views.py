@@ -202,7 +202,7 @@ def ADD_COURSE(request):
         else:
             course=Course.objects.all()
             for i in course:
-                if i.name == course_name:
+                if i.name.lower() == course_name.lower():
                     request.session['message'] = "Course Is Already Taken" # send massage on add_student.html page with redirect 
                     return redirect('add_course')
                     
@@ -244,16 +244,17 @@ def UPDATE_COURSE(request):
         name = request.POST.get('name')
         course_id = request.POST.get('course_id')
         courses = Course.objects.all()
-        if name.isalpha():
+        if all(x.isalpha() or x.isspace() for x in name):
             for i in courses:
                 if i.name.lower() == name.lower():
                     request.session['message'] = "Course Is Already Taken" 
                     return redirect('view_course')
-            else:
-                course.name = name #(course_name= edit_course name=Course (model))
-                course.save()
-                request.session['message'] = "Course Are Successfully Updated!"
-                return redirect('view_course')
+                
+            course =Course.objects.get(id =course_id)
+            course.name =name
+            course.save()
+            request.session['message'] = "Course Are Successfully Updated!"
+            return redirect('view_course')
         else:
             request.session['message'] = "Course name should be Alphabets only" 
             return redirect('edit_course',course_id)
@@ -414,13 +415,20 @@ def ADD_SUBJECT(request):
         if not(subject_name.isalpha() ):
             request.session['message'] = "Use Alphabet for Subject_Name "
             return redirect('add_subject')
+       
         
         else:
+
         
             course = Course.objects.get(id=course_id) #using this id take all information of that (Course(model)) id and store in course 
             staff=Staff.objects.get(id=staff_id) #using this id take all information of that (Staff(model)) id and store in staff
             
-            # and save all information of that id (Course(model)) and id (Staff(model))
+            subject = Subject.objects.all()
+            for i in subject:
+                if i.name.lower() == subject_name.lower():
+                    request.session['message'] = "Subject Is Already Taken" # send massage on add_student.html page with redirect 
+                    return redirect('add_subject')
+            
             subject=Subject(
                 name = subject_name,
                 course= course,
@@ -477,24 +485,25 @@ def UPDATE_SUBJECT(request):
         course = Course.objects.get(id=course_id)
         staff = Staff.objects.get(id=staff_id)
 
-          
-        if not(subject_name.isalpha() ):
-            request.session['message'] = "Use Alphabet for Subject_Name "
-            return redirect('view_subject')
-        
-        else:
+        subject = Subject.objects.all()
+        if all(x.isalpha() or x.isspace() for x in subject_name):
+            for i in subject:
+                if i.name.lower() == subject_name.lower():
+                    request.session['message'] = "Subjects Are Already Created!" 
+                    return redirect('view_subject')
 
-            subject=Subject(
-                id = subject_id,
-                name = subject_name,
-                course = course,
-                staff = staff,
-            )
+            subject = Subject.objects.get(id=subject_id)
+            subject.name = subject_name
+            subject.course = course
+            subject.staff = staff
+            
             
             subject.save()
             request.session['message'] = "Subjects Are Successfully Updated!" 
             return redirect('view_subject')
-
+        else:
+            request.session['message'] = "Course name should be Alphabets only" 
+            return redirect('edit_subject',subject_id)
     return render(request, 'HOD/edit_subject.html')    
 
 @login_required(login_url='/') 
